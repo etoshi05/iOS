@@ -1,7 +1,8 @@
 import Foundation
 
 struct MemoryGame<CardContent: Equatable> {
-    var cards: [Card]
+    private(set) var cards: [Card]
+    private(set) var score = 0
 
     private var indexOfTheOneAndOnlyFaceUpCard: Int? {
         get {
@@ -24,9 +25,10 @@ struct MemoryGame<CardContent: Equatable> {
             cards.append(Card(content: content, id: "\(index + 1)a"))
             cards.append(Card(content: content, id: "\(index + 1)b"))
         }
+        cards.shuffle()
     }
 
-    mutating func choose(card: Card) {
+    mutating func choose(_ card: Card) {
         guard let chosenIndex = cards.firstIndex(where: { $0.id == card.id }) else { return }
         guard !cards[chosenIndex].isFaceUp else { return }
         guard !cards[chosenIndex].isMatched else { return }
@@ -35,6 +37,16 @@ struct MemoryGame<CardContent: Equatable> {
             if cards[chosenIndex].content == cards[potentialMatchIndex].content {
                 cards[chosenIndex].isMatched = true
                 cards[potentialMatchIndex].isMatched = true
+                score += 2
+            } else {
+                if cards[chosenIndex].hasBeenSeen {
+                    score -= 1
+                }
+                if cards[potentialMatchIndex].hasBeenSeen {
+                    score -= 1
+                }
+                cards[chosenIndex].hasBeenSeen = true
+                cards[potentialMatchIndex].hasBeenSeen = true
             }
             cards[chosenIndex].isFaceUp = true
         } else {
@@ -47,9 +59,10 @@ struct MemoryGame<CardContent: Equatable> {
     }
 
     struct Card {
-        var isFaceUp: Bool = false
-        var isMatched: Bool = false
-        var content: CardContent
-        var id: String
+        var isFaceUp = false
+        var isMatched = false
+        var hasBeenSeen = false
+        let content: CardContent
+        let id: String
     }
 }
